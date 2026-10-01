@@ -1,0 +1,35 @@
+name: Build TopuClient Windows Installer
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Publish Application
+      run: dotnet publish TopuClient/TopuClient.csproj -c Release -r win-x64 --self-contained true
+
+    - name: Compile Inno Setup Script
+      uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
+      with:
+        path: installer/topuclient.iss
+        options: /O+
+
+    - name: Upload Installer Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: TopuClient-Installer
+        path: output/TopuClient_Setup.exe
