@@ -1,9 +1,7 @@
-name: Build TopuClient Windows Installer
+name: Build TopuClient Installer
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
     branches: [ "main" ]
 
 jobs:
@@ -11,25 +9,27 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-    - name: Setup .NET SDK
+    - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'
 
     - name: Publish Application
-      run: dotnet publish TopuClient/TopuClient.csproj -c Release -r win-x64 --self-contained true
+      run: dotnet publish TopuClient.csproj -c Release -r win-x64 --self-contained true
+
+    - name: Download Inno Setup
+      run: |
+        Invoke-WebRequest -Uri "https://files.jrsoftware.org/is/6/innosetup-6.2.2.exe" -OutFile "innosetup.exe"
+        Start-Process -FilePath "innosetup.exe" -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART" -Wait
 
     - name: Compile Inno Setup Script
-      uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
-      with:
-        path: installer/topuclient.iss
-        options: /O+
+      run: |
+        & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "Installer\setup.iss"
 
-    - name: Upload Installer Artifact
+    - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: TopuClient-Installer
-        path: output/TopuClient_Setup.exe
+        name: TopuClient-Setup
+        path: Output/TopuClientSetup.exe
